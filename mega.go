@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/pbkdf2"
+	"encoding/base64"
 )
 
 // Default settings
@@ -38,6 +39,9 @@ const (
 	minSleepTime         = 10 * time.Millisecond // for retries
 	maxSleepTime         = 5 * time.Second       // for retries
 )
+
+const megaMasterKeyLen = 16
+const megaSidLen = 43
 
 type config struct {
 	baseurl    string
@@ -612,12 +616,11 @@ func (m *Mega) MultiFactorLogin(email, passwd, multiFactor string) error {
 		return err
 	}
 
-	// Wait until the all the pending events have been received
+	// Wait until all the pending events have been received
 	m.WaitEvents(waitEvent, 5*time.Second)
 
 	return nil
 }
-
 // WaitEventsStart - call this before you do the action which might
 // generate events then use the returned channel as a parameter to
 // WaitEvents to wait for the event(s) to be received.
@@ -2081,4 +2084,56 @@ func (m *Mega) Link(n *Node, includeKey bool) (string, error) {
 	} else {
 		return fmt.Sprintf("%v/#!%v", BASE_DOWNLOAD_URL, id), nil
 	}
+}
+
+// GetSession returns the current session as a base64-encoded string of master key + SID, with version byte for v2 accounts
+func (m *Mega) GetSession() string {
+	session := []byte{}
+	if m.accountVersion == 2 {
+		session = append(session, 1)
+	}
+	session = append(session, m.k...)
+	session = append(session, []byte(m.sid)...)
+	// Debug print removed for production use
+	return base64.StdEncoding.EncodeToString(session)
+}
+
+// LoginWithSession logs in using a session token (master key + SID, base64-encoded, with version byte for v2)
+func (m *Mega) LoginWithSession(session string) error {
+	data, err := base64.StdEncoding.DecodeString(session)
+	if err != nil {
+		return err
+	}
+	// Debug print removed for production use
+	if len(data) >= 1+megaMasterKeyLen+16 && data[0] == 1 {
+		// v2 account with version byte
+		m.accountVersion = 2
+		m.k = make([]byte, megaMasterKeyLen)
+		copy(m.k, data[1:1+megaMasterKeyLen])
+		m.sid = string(data[1+megaMasterKeyLen:])
+		// Debug print removed for production use
+	} else if len(data) >= megaMasterKeyLen+16 {
+		// v1 account (no version byte)
+		m.accountVersion = 1
+		m.k = make([]byte, megaMasterKeyLen)
+		copy(m.k, data[:megaMasterKeyLen])
+		m.sid = string(data[megaMasterKeyLen:])
+		// Debug print removed for production use
+	} else {
+		return errors.New("session data length does not match v1 or v2 format")
+	}
+	// Debug print removed for production use
+	// Now try to use the session
+	_, err = m.GetUser()
+	if err != nil {
+		return fmt.Errorf("LoginWithSession: session invalid or expired: %w", err)
+	}
+	err = m.getFileSystem()
+	if err != nil {
+		return fmt.Errorf("LoginWithSession: failed to load file system: %w", err)
+	}
+	if m.FS == nil || m.FS.GetRoot() == nil {
+		return fmt.Errorf("LoginWithSession: file system not initialized after session restore")
+	}
+	return nil
 }
