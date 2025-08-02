@@ -3,9 +3,9 @@ go-mega
 
 A client library in go for mega.co.nz storage service.
 
-An implementation of command-line utility can be found at [https://github.com/t3rm1n4l/megacmd](https://github.com/t3rm1n4l/megacmd)
+An implementation of command-line utility can be found at [https://github.com/inspirationull/megacmd](https://github.com/inspirationull/megacmd)
 
-[![Build Status](https://secure.travis-ci.org/t3rm1n4l/go-mega.png?branch=master)](http://travis-ci.org/t3rm1n4l/go-mega)
+[![Build Status](https://secure.travis-ci.org/inspirationull/go-mega.png?branch=master)](http://travis-ci.org/inspirationull/go-mega)
 
 ### What can i do with this library?
 This is an API client library for MEGA storage service. Currently, the library supports the basic APIs and operations as follows:
@@ -23,7 +23,7 @@ This is an API client library for MEGA storage service. Currently, the library s
 
 ### API methods
 
-Please find full doc at [https://pkg.go.dev/github.com/t3rm1n4l/go-mega](https://pkg.go.dev/github.com/t3rm1n4l/go-mega)
+Please find full doc at [https://pkg.go.dev/github.com/inspirationull/go-mega](https://pkg.go.dev/github.com/inspirationull/go-mega)
 
 ### Testing
 
@@ -52,7 +52,7 @@ Please find full doc at [https://pkg.go.dev/github.com/t3rm1n4l/go-mega](https:/
     === RUN TestEventNotify
     --- PASS: TestEventNotify (19.65 seconds)
     PASS
-    ok  github.com/t3rm1n4l/go-mega68.745s
+    ok  github.com/inspirationull/go-mega68.745s
 
 ### TODO
   - Implement APIs for public download url generation
